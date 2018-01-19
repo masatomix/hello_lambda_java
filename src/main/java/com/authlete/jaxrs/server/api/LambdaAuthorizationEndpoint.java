@@ -71,6 +71,10 @@ public class LambdaAuthorizationEndpoint {
 
             // Delegate the task to the handler.
             Response response = handler.handle(parameters);
+            
+            log.debug("sessionId:{}", request.getSession().getId());
+            log.debug("Ticket:{}", request.getSession().getAttribute("ticket"));
+            
             System.out.println("------ kino log start -------");
             // System.out.println(response);
             // System.out.println(JSONUtils.toPrettyStr(response));

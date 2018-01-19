@@ -14,6 +14,8 @@ package nu.mine.kino.servlets;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.authlete.jaxrs.server.api.IRequest;
 
 import lombok.Getter;
@@ -24,24 +26,29 @@ import lombok.ToString;
  * @author Masatomi KINO
  * @version $Revision$
  */
-@Getter
-@Setter
-@ToString
 public class HttpServletRequestImpl extends HttpServletRequestAdaptor {
 
-    private IRequest request = null;
+    private final IRequest request;
+
+    private String sessionId;
+
+    private HttpSession session = null;
+
+    public HttpServletRequestImpl(IRequest request, String sessionId) {
+        super();
+        this.request = request;
+        this.sessionId = sessionId;
+    }
 
     public HttpServletRequestImpl(IRequest request) {
         super();
         this.request = request;
     }
 
-    private static HttpSession session = null;
-
     @Override
     public HttpSession getSession(boolean create) {
         if (session == null) {
-            session = new HttpSessionImpl();
+            session = internalGetSession(sessionId);
         }
         return session;
     }
@@ -49,6 +56,12 @@ public class HttpServletRequestImpl extends HttpServletRequestAdaptor {
     @Override
     public HttpSession getSession() {
         return this.getSession(true);
+    }
+
+    private HttpSessionImpl internalGetSession(String sessionId) {
+        // 引数のsessionIdでセッションを作成する。
+        // ホントはsessionIdの値でどこかストア先を検索するべきだが、とりあえず今のところ毎回作ってしまう
+        return new HttpSessionImpl(sessionId);
     }
 
 }
