@@ -321,22 +321,16 @@ public class HttpServletRequestAdaptor implements HttpServletRequest {
         return null;
     }
 
-    private static HttpSession session = null;
-
     @Override
     public HttpSession getSession(boolean create) {
-        if (session == null) {
-            session = new HttpSessionImpl();
-        }
-        return session;
+        // TODO 自動生成されたメソッド・スタブ
+        return null;
     }
 
     @Override
     public HttpSession getSession() {
-        if (session == null) {
-            session = new HttpSessionImpl();
-        }
-        return session;
+        // TODO 自動生成されたメソッド・スタブ
+        return null;
     }
 
     @Override
