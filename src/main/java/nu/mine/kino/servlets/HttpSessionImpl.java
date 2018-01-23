@@ -1,13 +1,16 @@
 package nu.mine.kino.servlets;
 
+import java.text.ParseException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /******************************************************************************
@@ -28,47 +31,81 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class HttpSessionImpl extends HttpSessionAdaptor {
+
     private Map<String, Object> sessionMap = null;
 
     @Getter
-    @Setter
     private String id;
 
     /**
      * 引数のidがnullとか""なら、ランダム値を設定する。そうでなければ引数のidをsessionIdとする
      * 
+     * sessionMapはnullでなかったら設定するが、nullの場合は空のMap
+     * 
      * @param id
+     * @param sessionMap
      */
-    public HttpSessionImpl(String id) {
+    public HttpSessionImpl(String id, Map<String, Object> sessionMap) {
         this.id = id;
         if (StringUtils.isEmpty(id)) {
             this.id = RandomStringUtils.randomAlphanumeric(40);
         }
-        sessionMap = new HashMap<String, Object>();
-    }
 
-    public HttpSessionImpl() {
-        this(null);
+        if (sessionMap != null) {
+            this.sessionMap = sessionMap;
+        } else {
+            this.sessionMap = new HashMap<String, Object>();
+        }
+
     }
 
     @Override
     public Object getAttribute(String name) {
         // log.debug("getAttribute start.");
         // log.debug("ID:{},key:{}", id, name);
-        return sessionMap.get(name);
+        sessionMap = SessionStoreUtils.searchOrCreate(this.id);
+        String result = (String) sessionMap.get(name);
+
+        // Dateが格納できないっぽいので、超暫定策
+        if (name.equals("authTime") && result != null) {
+            try {
+                Date date = DateUtils.parseDate(result, new String[] {
+                        DateFormatUtils.ISO_DATE_FORMAT.getPattern() });
+                return date;
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        log.debug("get key[{}]: {}", name, result);
+        return result;
     }
 
     @Override
     public void setAttribute(String name, Object value) {
         // log.debug("setAttribute start.");
         // log.debug("ID:{},key[{}]:{}", id, name, value);
-        sessionMap.put(name, value);
+
+        if (value instanceof String) {
+            sessionMap.put(name, value);
+            SessionStoreUtils.searchAndUpdate(this.id, sessionMap);
+        }
+
+        // Dateが格納できないっぽいので、超暫定策
+        if (value instanceof Date) {
+            String dateStr = DateFormatUtils.format((Date) value,
+                    DateFormatUtils.ISO_DATE_FORMAT.getPattern());
+            sessionMap.put(name, dateStr);
+            log.debug("set key[{}]:{}", name, value);
+            SessionStoreUtils.searchAndUpdate(this.id, sessionMap);
+        }
+
     }
 
     @Override
     public void removeAttribute(String name) {
         // log.debug("removeAttribute start.");
         sessionMap.remove(name);
+        SessionStoreUtils.searchAndUpdate(this.id, sessionMap);
     }
 
 }

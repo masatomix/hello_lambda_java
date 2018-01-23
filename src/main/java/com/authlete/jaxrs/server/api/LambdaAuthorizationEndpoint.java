@@ -46,9 +46,9 @@ public class LambdaAuthorizationEndpoint {
     // http://docs.aws.amazon.com/ja_jp/lambda/latest/dg/java-handler-io-type-pojo.html
     public Response get(AuthorizationEndpointRequestClass gateWayRequest,
             Context context) {
-        LambdaLogger logger = context.getLogger();
-        logger.log(context.toString());
-        logger.log("count:" + gateWayRequest.toString());
+        // LambdaLogger logger = context.getLogger();
+        // logger.log(context.toString());
+        // logger.log("count:" + gateWayRequest.toString());
 
         HttpServletRequest request = new HttpServletRequestImpl(gateWayRequest);
 
@@ -71,14 +71,10 @@ public class LambdaAuthorizationEndpoint {
 
             // Delegate the task to the handler.
             Response response = handler.handle(parameters);
-            
+
             log.debug("sessionId:{}", request.getSession().getId());
             log.debug("Ticket:{}", request.getSession().getAttribute("ticket"));
-            
-            System.out.println("------ kino log start -------");
-            // System.out.println(response);
-            // System.out.println(JSONUtils.toPrettyStr(response));
-            System.out.println("------ kino log end -------");
+
             return response;
         } catch (WebApplicationException e) {
             // An error occurred in the handler.
