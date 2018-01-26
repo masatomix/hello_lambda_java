@@ -88,8 +88,6 @@ public class LambdaAuthorizationDecisionEndpoint {
 
             log.debug("user: {}", user.toString());
             log.debug("ticket: {}", ticket);
-            log.debug("claimNames: {}", claimNames);
-            log.debug("claimLocales: {}", claimLocales);
 
             // Delegate the task to the handler.
             return handler.handle(ticket, claimNames, claimLocales);

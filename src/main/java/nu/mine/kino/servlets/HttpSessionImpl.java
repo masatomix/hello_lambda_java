@@ -11,6 +11,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /******************************************************************************
@@ -38,18 +39,15 @@ public class HttpSessionImpl extends HttpSessionAdaptor {
     private String id;
 
     /**
-     * 引数のidがnullとか""なら、ランダム値を設定する。そうでなければ引数のidをsessionIdとする
+     * 引数のidをsessionIdとする
      * 
      * sessionMapはnullでなかったら設定するが、nullの場合は空のMap
      * 
      * @param id
      * @param sessionMap
      */
-    public HttpSessionImpl(String id, Map<String, Object> sessionMap) {
+    public HttpSessionImpl(@NonNull String id, Map<String, Object> sessionMap) {
         this.id = id;
-        if (StringUtils.isEmpty(id)) {
-            this.id = RandomStringUtils.randomAlphanumeric(40);
-        }
 
         if (sessionMap != null) {
             this.sessionMap = sessionMap;
@@ -63,7 +61,7 @@ public class HttpSessionImpl extends HttpSessionAdaptor {
     public Object getAttribute(String name) {
         // log.debug("getAttribute start.");
         // log.debug("ID:{},key:{}", id, name);
-        sessionMap = SessionStoreUtils.searchOrCreate(this.id);
+        sessionMap = SessionStoreUtils.INSTANCE.searchOrCreate(this.id);
         String result = (String) sessionMap.get(name);
 
         // Dateが格納できないっぽいので、超暫定策
@@ -87,7 +85,7 @@ public class HttpSessionImpl extends HttpSessionAdaptor {
 
         if (value instanceof String) {
             sessionMap.put(name, value);
-            SessionStoreUtils.searchAndUpdate(this.id, sessionMap);
+            SessionStoreUtils.INSTANCE.searchAndUpdate(this.id, sessionMap);
         }
 
         // Dateが格納できないっぽいので、超暫定策
@@ -96,7 +94,7 @@ public class HttpSessionImpl extends HttpSessionAdaptor {
                     DateFormatUtils.ISO_DATE_FORMAT.getPattern());
             sessionMap.put(name, dateStr);
             log.debug("set key[{}]:{}", name, value);
-            SessionStoreUtils.searchAndUpdate(this.id, sessionMap);
+            SessionStoreUtils.INSTANCE.searchAndUpdate(this.id, sessionMap);
         }
 
     }
@@ -105,7 +103,7 @@ public class HttpSessionImpl extends HttpSessionAdaptor {
     public void removeAttribute(String name) {
         // log.debug("removeAttribute start.");
         sessionMap.remove(name);
-        SessionStoreUtils.searchAndUpdate(this.id, sessionMap);
+        SessionStoreUtils.INSTANCE.searchAndUpdate(this.id, sessionMap);
     }
 
 }

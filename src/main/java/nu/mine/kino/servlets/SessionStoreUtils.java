@@ -34,23 +34,16 @@ import lombok.extern.slf4j.Slf4j;
  * @version $Revision$
  */
 @Slf4j
-public class SessionStoreUtils {
+public abstract class SessionStoreUtils {
 
-    private static final Regions REGION = Regions.AP_NORTHEAST_1;
-
-    private static final String tableName = "HttpSession";
-
-    private static final String SESSION_ID_NAME = "sessionId";
-
-    private static final String SESSION_MAP_NAME = "sessionMap";
-
-    private static DynamoDB dynamoDb;
-
-    static {
-        AmazonDynamoDB client = new AmazonDynamoDBClient();
-        client.setRegion(Region.getRegion(REGION));
-        dynamoDb = new DynamoDB(client);
-    }
+    /**
+     * 指定したsessionId のSession情報(Sessionに格納したインスタンスを保持するオブジェクト)をストア先から探す。
+     * 存在する、しないを返す
+     * 
+     * @param sessionId
+     * @return 存在したらtrue、そうでなければ false
+     */
+    public abstract boolean exists(String sessionId);
 
     /**
      * 指定したsessionId のSession情報(Sessionに格納したインスタンスを保持するオブジェクト)をストア先から探して返す。
@@ -59,20 +52,7 @@ public class SessionStoreUtils {
      * @param sessionId
      * @return Sessionに格納したインスタンスを保持するオブジェクト
      */
-    public static Map<String, Object> searchOrCreate(String sessionId) {
-        Item item = searchItem(sessionId);
-
-        if (item != null) {
-            log.debug("該当するsessionIdが見つかりました。ID:{}", sessionId);
-            Map<String, Object> sessionMap = item.getMap(SESSION_MAP_NAME);
-            return sessionMap;
-        }
-
-        log.debug("該当するsessionIdが見つかりませんでした。ID:{}", sessionId);
-        putItem(new Item().withPrimaryKey(SESSION_ID_NAME, sessionId)
-                .withMap(SESSION_MAP_NAME, new HashMap<String, Object>()));
-        return new HashMap<String, Object>();
-    }
+    public abstract Map<String, Object> searchOrCreate(String sessionId);
 
     /**
      * 指定したsessionId
@@ -83,33 +63,78 @@ public class SessionStoreUtils {
      * @param sessionMap
      *            Sessionに格納されたインスタンスを更新するための情報
      */
-    public static void searchAndUpdate(String sessionId,
-            Map<String, Object> sessionMap) {
-        Item item = searchItem(sessionId);
+    public abstract void searchAndUpdate(String sessionId,
+            Map<String, Object> sessionMap);
 
-        if (item != null) {
-            log.debug("sessionが見つかりました。ID:{}", sessionId);
-            putItem(session2Item(sessionId, sessionMap));
-        } else {
-            log.debug("sessionが見つかりませんでした。ID:{}", sessionId);
-            putItem(new Item().withPrimaryKey(SESSION_ID_NAME, sessionId));
+    public static final SessionStoreUtils INSTANCE = new SessionStoreUtils() {
+        private final Regions REGION = Regions.AP_NORTHEAST_1;
+
+        private static final String tableName = "HttpSession";
+
+        private static final String SESSION_ID_NAME = "sessionId";
+
+        private static final String SESSION_MAP_NAME = "sessionMap";
+
+        private DynamoDB dynamoDb;
+
+        {
+            log.debug("SessionStoreUtilsのコンストラクタ");
+            AmazonDynamoDB client = new AmazonDynamoDBClient();
+            client.setRegion(Region.getRegion(REGION));
+            dynamoDb = new DynamoDB(client);
         }
-    }
 
-    private static Item searchItem(String sessionId) {
-        Table table = dynamoDb.getTable(tableName);
-        return table.getItem(SESSION_ID_NAME, sessionId);
-    }
+        @Override
+        public boolean exists(String sessionId) {
+            Item item = searchItem(sessionId);
+            return item != null;
+        }
 
-    private static PutItemOutcome putItem(Item item) {
-        Table table = dynamoDb.getTable(tableName);
-        return table.putItem(new PutItemSpec().withItem(item));
-    }
+        @Override
+        public Map<String, Object> searchOrCreate(String sessionId) {
+            Item item = searchItem(sessionId);
 
-    private static Item session2Item(String sessionId,
-            Map<String, Object> sessionMap) {
-        return new Item().withPrimaryKey(SESSION_ID_NAME, sessionId)
-                .withMap(SESSION_MAP_NAME, sessionMap);
-    }
+            if (item != null) {
+                log.debug("該当するsessionIdが見つかりました。ID:{}", sessionId);
+                Map<String, Object> sessionMap = item.getMap(SESSION_MAP_NAME);
+                return sessionMap;
+            }
+
+            log.debug("該当するsessionIdが見つかりませんでした。ID:{}", sessionId);
+            putItem(new Item().withPrimaryKey(SESSION_ID_NAME, sessionId)
+                    .withMap(SESSION_MAP_NAME, new HashMap<String, Object>()));
+            return new HashMap<String, Object>();
+        }
+
+        @Override
+        public void searchAndUpdate(String sessionId,
+                Map<String, Object> sessionMap) {
+            Item item = searchItem(sessionId);
+
+            if (item != null) {
+                log.debug("sessionが見つかりました。ID:{}", sessionId);
+                putItem(session2Item(sessionId, sessionMap));
+            } else {
+                log.debug("sessionが見つかりませんでした。ID:{}", sessionId);
+                putItem(new Item().withPrimaryKey(SESSION_ID_NAME, sessionId));
+            }
+        }
+
+        private Item searchItem(String sessionId) {
+            Table table = dynamoDb.getTable(tableName);
+            return table.getItem(SESSION_ID_NAME, sessionId);
+        }
+
+        private PutItemOutcome putItem(Item item) {
+            Table table = dynamoDb.getTable(tableName);
+            return table.putItem(new PutItemSpec().withItem(item));
+        }
+
+        private Item session2Item(String sessionId,
+                Map<String, Object> sessionMap) {
+            return new Item().withPrimaryKey(SESSION_ID_NAME, sessionId)
+                    .withMap(SESSION_MAP_NAME, sessionMap);
+        }
+    };
 
 }

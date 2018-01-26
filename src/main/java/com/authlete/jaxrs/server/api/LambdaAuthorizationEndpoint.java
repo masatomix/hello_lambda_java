@@ -19,7 +19,6 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.authlete.common.api.AuthleteApi;
 import com.authlete.common.api.AuthleteApiFactory;
 import com.authlete.common.conf.AuthleteConfiguration;
@@ -35,20 +34,10 @@ import nu.mine.kino.servlets.HttpServletRequestImpl;
  */
 @Slf4j
 public class LambdaAuthorizationEndpoint {
-    // public String get2(AuthorizationEndpointRequestClass gateWayRequest,
-    // Context context) {
-    // LambdaLogger logger = context.getLogger();
-    // logger.log(context.toString());
-    // logger.log("request:" + gateWayRequest.toString());
-    // return String.valueOf("Hello:" + gateWayRequest.toString());
-    // }
 
     // http://docs.aws.amazon.com/ja_jp/lambda/latest/dg/java-handler-io-type-pojo.html
     public Response get(AuthorizationEndpointRequestClass gateWayRequest,
             Context context) {
-        // LambdaLogger logger = context.getLogger();
-        // logger.log(context.toString());
-        // logger.log("count:" + gateWayRequest.toString());
 
         HttpServletRequest request = new HttpServletRequestImpl(gateWayRequest);
 
