@@ -31,5 +31,6 @@ public class AuthorizationDecisionEndpointRequestClass implements IRequest {
 
     private String authorized;
 
-    private String ticket;
+    private String sessionId;
+
 }

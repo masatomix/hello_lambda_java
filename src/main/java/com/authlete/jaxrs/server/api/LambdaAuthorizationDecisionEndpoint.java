@@ -29,7 +29,6 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.internal.util.collection.MultivaluedStringMap;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.authlete.common.api.AuthleteApi;
 import com.authlete.common.api.AuthleteApiFactory;
 import com.authlete.common.conf.AuthleteConfiguration;
@@ -55,7 +54,8 @@ public class LambdaAuthorizationDecisionEndpoint {
         // public Response post(@Context HttpServletRequest request,
         // MultivaluedMap<String, String> parameters) {
 
-        HttpServletRequest request = new HttpServletRequestImpl(gateWayRequest);
+        HttpServletRequest request = new HttpServletRequestImpl(gateWayRequest,
+                gateWayRequest.getSessionId());
 
         MultivaluedMap<String, String> parameters = new MultivaluedStringMap();
         parameters.add("loginId", gateWayRequest.getLoginId());
@@ -68,8 +68,9 @@ public class LambdaAuthorizationDecisionEndpoint {
 
         // Retrieve some variables from the session. See the implementation
         // of AuthorizationRequestHandlerSpiImpl.getAuthorizationPage().
-        // String ticket = (String) takeAttribute(session, "ticket");
-        String ticket = gateWayRequest.getTicket(); // チケットパラメータが必要。
+        String ticket = (String) takeAttribute(session, "ticket");
+        log.debug("ticket: {}", ticket);
+        // String ticket = gateWayRequest.getTicket(); // チケットパラメータが必要。
         String[] claimNames = (String[]) takeAttribute(session, "claimNames");
         String[] claimLocales = (String[]) takeAttribute(session,
                 "claimLocales");
@@ -84,6 +85,9 @@ public class LambdaAuthorizationDecisionEndpoint {
             AuthorizationDecisionHandler handler = new AuthorizationDecisionHandler(
                     api, new AuthorizationDecisionHandlerSpiImpl(parameters,
                             user, authTime));
+
+            log.debug("user: {}", user.toString());
+            log.debug("ticket: {}", ticket);
 
             // Delegate the task to the handler.
             return handler.handle(ticket, claimNames, claimLocales);

@@ -70,7 +70,8 @@ public class HttpSessionAdaptor implements HttpSession {
 
     @Override
     public Object getAttribute(String name) {
-        return sessionMap.get(name);
+        // TODO 自動生成されたメソッド・スタブ
+        return null;
     }
 
     @Override
@@ -80,7 +81,7 @@ public class HttpSessionAdaptor implements HttpSession {
     }
 
     @Override
-    public Enumeration<String> getAttributeNames() {
+    public Enumeration getAttributeNames() {
         // TODO 自動生成されたメソッド・スタブ
         return null;
     }
@@ -91,21 +92,22 @@ public class HttpSessionAdaptor implements HttpSession {
         return null;
     }
 
-    private Map<String, Object> sessionMap = new HashMap<String, Object>();
-
     @Override
     public void setAttribute(String name, Object value) {
-        sessionMap.put(name, value);
+        // TODO 自動生成されたメソッド・スタブ
+
     }
 
     @Override
     public void putValue(String name, Object value) {
+        // TODO 自動生成されたメソッド・スタブ
 
     }
 
     @Override
     public void removeAttribute(String name) {
-        sessionMap.remove(name);
+        // TODO 自動生成されたメソッド・スタブ
+
     }
 
     @Override

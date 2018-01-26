@@ -1,18 +1,17 @@
 #!/bin/sh
 
 
-cd ../authlete-java-common && mvn -DdownloadSources=true -DdownloadJavadocs=true eclipse:clean eclipse:eclipse
-if [ $? -gt 0 ]; then
-  echo "ERROR: authlete-java-common";
-  exit 1;
-fi
-
-#cd ../authlete-java-jaxrs && mvn -DdownloadSources=true -DdownloadJavadocs=true eclipse:clean eclipse:eclipse
-
+#cd ../authlete-java-common && mvn -DdownloadSources=true -DdownloadJavadocs=true eclipse:clean eclipse:eclipse
 #if [ $? -gt 0 ]; then
-#  echo "ERROR: authlete-java-jaxrs";
+#  echo "ERROR: authlete-java-common";
 #  exit 1;
 #fi
+
+cd ../authlete-java-jaxrs && mvn -DdownloadSources=true -DdownloadJavadocs=true eclipse:clean eclipse:eclipse
+if [ $? -gt 0 ]; then
+  echo "ERROR: authlete-java-jaxrs";
+  exit 1;
+fi
 
 cd ../java-oauth-server && mvn -DdownloadSources=true -DdownloadJavadocs=true eclipse:clean eclipse:eclipse
 if [ $? -gt 0 ]; then

@@ -14,36 +14,44 @@ package nu.mine.kino.servlets;
 
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import com.authlete.jaxrs.server.api.IRequest;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.NonNull;
 
 /**
  * @author Masatomi KINO
  * @version $Revision$
  */
-@Getter
-@Setter
-@ToString
 public class HttpServletRequestImpl extends HttpServletRequestAdaptor {
 
-    private IRequest request = null;
+    private final IRequest request;
 
-    public HttpServletRequestImpl(IRequest request) {
+    private final String sessionId;
+
+    public HttpServletRequestImpl(IRequest request, @NonNull String sessionId) {
         super();
         this.request = request;
+        this.sessionId = sessionId;
     }
 
-    private static HttpSession session = null;
+    public HttpServletRequestImpl(IRequest request) {
+        this.request = request;
+        this.sessionId = RandomStringUtils.randomAlphanumeric(40);
+    }
 
     @Override
     public HttpSession getSession(boolean create) {
-        if (session == null) {
-            session = new HttpSessionImpl();
+        if (create == false) { // create == false の場合、存在しなければnullを返す
+            if (!SessionStoreUtils.INSTANCE.exists(sessionId)) {
+                return null;
+            }
         }
-        return session;
+
+        HttpSessionImpl httpSessionImpl = new HttpSessionImpl(sessionId,
+                SessionStoreUtils.INSTANCE.searchOrCreate(sessionId));
+        return httpSessionImpl;
     }
 
     @Override
