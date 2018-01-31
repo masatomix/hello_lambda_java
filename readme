@@ -1,3 +1,4 @@
 curl http://localhost:8080/api/authorization  -X POST --data-binary @authorization.json  -H 'Content-Type:application/json' -v
 curl http://localhost:8080/api/authorization/decision  -X POST --data-binary @decision.json  -H 'Content-Type:application/json' -v
 curl http://localhost:8080/api/token  -X POST --data-binary @token.json -H 'Content-Type:application/json' -v
+curl http://localhost:8080/api/userinfo  -X POST --data-binary @userinfo.json  -H 'Content-Type:application/json' -v 
