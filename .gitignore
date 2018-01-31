@@ -84,7 +84,10 @@ target
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
-
 **/**/authlete.properties
+
+authorization.json
+decision.json
+token.json
 
 # End of https://www.gitignore.io/api/java,eclipse

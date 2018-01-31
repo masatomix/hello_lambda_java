@@ -12,18 +12,19 @@
 
 package nu.mine.kino.servlets;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.PutItemSpec;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,8 +64,7 @@ public abstract class SessionStoreUtils {
      * @param sessionMap
      *            Sessionに格納されたインスタンスを更新するための情報
      */
-    public abstract void searchAndUpdate(String sessionId,
-            Map<String, Object> sessionMap);
+    public abstract void searchAndUpdate(HttpSessionModel model);
 
     public static final SessionStoreUtils INSTANCE = new SessionStoreUtils() {
         private final Regions REGION = Regions.AP_NORTHEAST_1;
@@ -79,9 +79,16 @@ public abstract class SessionStoreUtils {
 
         {
             log.debug("SessionStoreUtilsのコンストラクタ");
-            AmazonDynamoDB client = new AmazonDynamoDBClient();
-            client.setRegion(Region.getRegion(REGION));
+            AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
+                    .withRegion(REGION)
+                    // .withCredentials(new ProfileCredentialsProvider("aws2"))
+                    .build();
+
+            // AmazonDynamoDB client = new AmazonDynamoDBClient(
+            // new ProfileCredentialsProvider("aws2"));
+            // client.setRegion(Region.getRegion(REGION));
             dynamoDb = new DynamoDB(client);
+
         }
 
         @Override
@@ -96,19 +103,29 @@ public abstract class SessionStoreUtils {
 
             if (item != null) {
                 log.debug("該当するsessionIdが見つかりました。ID:{}", sessionId);
-                Map<String, Object> sessionMap = item.getMap(SESSION_MAP_NAME);
-                return sessionMap;
+                String sessionMapStr = item.getString(SESSION_MAP_NAME);
+                try {
+                    Map<String, Object> sessionMap = JSONUtils
+                            .json2Map(sessionMapStr);
+                    // Map<String, Object> sessionMap =
+                    // item.getMap(SESSION_MAP_NAME);
+                    return sessionMap;
+                } catch (IOException e) {
+                    throw new IllegalArgumentException(e);
+                }
             }
 
             log.debug("該当するsessionIdが見つかりませんでした。ID:{}", sessionId);
-            putItem(new Item().withPrimaryKey(SESSION_ID_NAME, sessionId)
-                    .withMap(SESSION_MAP_NAME, new HashMap<String, Object>()));
+            // putItem(new Item().withPrimaryKey(SESSION_ID_NAME, sessionId)
+            // .withMap(SESSION_MAP_NAME, new HashMap<String, Object>()));
+            putItem(new Item().withPrimaryKey(SESSION_ID_NAME, sessionId));
             return new HashMap<String, Object>();
         }
 
         @Override
-        public void searchAndUpdate(String sessionId,
-                Map<String, Object> sessionMap) {
+        public void searchAndUpdate(HttpSessionModel model) {
+            String sessionId = model.getSessionId();
+            Map<String, Object> sessionMap = model.getSessionMap();
             Item item = searchItem(sessionId);
 
             if (item != null) {
@@ -132,8 +149,13 @@ public abstract class SessionStoreUtils {
 
         private Item session2Item(String sessionId,
                 Map<String, Object> sessionMap) {
-            return new Item().withPrimaryKey(SESSION_ID_NAME, sessionId)
-                    .withMap(SESSION_MAP_NAME, sessionMap);
+            try {
+                String toStr = JSONUtils.toStr(sessionMap);
+                return new Item().withPrimaryKey(SESSION_ID_NAME, sessionId)
+                        .withString(SESSION_MAP_NAME, toStr);
+            } catch (JsonProcessingException e) {
+                throw new IllegalArgumentException(e);
+            }
         }
     };
 
