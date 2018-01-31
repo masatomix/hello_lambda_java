@@ -77,9 +77,9 @@ public class LambdaTokenEndpoint {
         // @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
         // MultivaluedMap<String, String> parameters) {
 
-        LambdaLogger logger = context.getLogger();
-        logger.log(context.toString());
-        logger.log("count:" + gateWayRequest.toString());
+        // LambdaLogger logger = context.getLogger();
+        // logger.log(context.toString());
+        // logger.log("count:" + gateWayRequest.toString());
 
         HttpServletRequest request = new HttpServletRequestImpl(gateWayRequest);
 

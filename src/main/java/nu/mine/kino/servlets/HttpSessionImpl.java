@@ -1,14 +1,8 @@
 package nu.mine.kino.servlets;
 
-import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -62,19 +56,20 @@ public class HttpSessionImpl extends HttpSessionAdaptor {
         // log.debug("getAttribute start.");
         // log.debug("ID:{},key:{}", id, name);
         sessionMap = SessionStoreUtils.INSTANCE.searchOrCreate(this.id);
-        String result = (String) sessionMap.get(name);
+        Object result = sessionMap.get(name);
+        // String result = (String) sessionMap.get(name);
 
-        // Dateが格納できないっぽいので、超暫定策
+        // Dateが格納できないっぽく、JSONにしたときにLongにしているので、
+        // 逆に"authTime"だけはLongからDateに戻してあげる。
         if (name.equals("authTime") && result != null) {
-            try {
-                Date date = DateUtils.parseDate(result, new String[] {
-                        DateFormatUtils.ISO_DATE_FORMAT.getPattern() });
-                return date;
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+            return new Date((Long) result); // Longで帰ってきてしまう
         }
-        log.debug("get key[{}]: {}", name, result);
+
+        if (result != null) {
+            log.debug("get key[{}]: {}", name, result.toString());
+        } else {
+            log.debug("get key[{}]: {}", name, null);
+        }
         return result;
     }
 
@@ -83,19 +78,9 @@ public class HttpSessionImpl extends HttpSessionAdaptor {
         // log.debug("setAttribute start.");
         // log.debug("ID:{},key[{}]:{}", id, name, value);
 
-        if (value instanceof String) {
-            sessionMap.put(name, value);
-            SessionStoreUtils.INSTANCE.searchAndUpdate(this.id, sessionMap);
-        }
-
-        // Dateが格納できないっぽいので、超暫定策
-        if (value instanceof Date) {
-            String dateStr = DateFormatUtils.format((Date) value,
-                    DateFormatUtils.ISO_DATE_FORMAT.getPattern());
-            sessionMap.put(name, dateStr);
-            log.debug("set key[{}]:{}", name, value);
-            SessionStoreUtils.INSTANCE.searchAndUpdate(this.id, sessionMap);
-        }
+        sessionMap.put(name, value);
+        SessionStoreUtils.INSTANCE
+                .searchAndUpdate(new HttpSessionModel(this.id, sessionMap));
 
     }
 
@@ -103,7 +88,8 @@ public class HttpSessionImpl extends HttpSessionAdaptor {
     public void removeAttribute(String name) {
         // log.debug("removeAttribute start.");
         sessionMap.remove(name);
-        SessionStoreUtils.INSTANCE.searchAndUpdate(this.id, sessionMap);
+        SessionStoreUtils.INSTANCE
+                .searchAndUpdate(new HttpSessionModel(this.id, sessionMap));
     }
 
 }
