@@ -89,5 +89,6 @@ hs_err_pid*
 authorization.json
 decision.json
 token.json
+userinfo.json
 
 # End of https://www.gitignore.io/api/java,eclipse
